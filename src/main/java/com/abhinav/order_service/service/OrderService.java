@@ -1,10 +1,14 @@
 package com.abhinav.order_service.service;
 
 import com.abhinav.order_service.domain.Order;
+import com.abhinav.order_service.domain.OrderStatus;
 import com.abhinav.order_service.dto.CreateOrderRequest;
 import com.abhinav.order_service.dto.OrderResponse;
 import com.abhinav.order_service.exception.OrderNotFoundException;
 import com.abhinav.order_service.repository.OrderRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,7 +47,18 @@ public class OrderService {
     }
 
     public OrderResponse getOrderById(Long id){
-        Order order = orderRepository.findById(id).orElseThrow(() ->new OrderNotFoundException("Order Not Found!"));
+        Order order = orderRepository.findById(id).orElseThrow(() ->new OrderNotFoundException(String.valueOf(id)));
         return mapToResponse(order);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Long id, OrderStatus newStatus){
+        Order order = orderRepository.findById(id).orElseThrow(()-> new OrderNotFoundException(String.valueOf(id)));
+        order.setStatus(newStatus);
+    }
+
+    public Page<OrderResponse> getOrdersByUser(String userId, Pageable pageable){
+        Page<Order> ordersPage = orderRepository.findByUserId(userId, pageable);
+        return ordersPage.map(this::mapToResponse);
     }
 }
