@@ -1,12 +1,11 @@
 package com.abhinav.order_service.controller;
 
 import com.abhinav.order_service.domain.Order;
-import com.abhinav.order_service.dto.CreateOrderRequest;
-import com.abhinav.order_service.dto.OrderResponse;
-import com.abhinav.order_service.dto.UpdateOrderStatusRequest;
+import com.abhinav.order_service.dto.*;
 import com.abhinav.order_service.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -25,7 +24,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         OrderResponse response = orderService.createOrder(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -38,17 +37,33 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<String> updateOrderStatus(@PathVariable Long id, @RequestBody UpdateOrderStatusRequest request){
         orderService.updateOrderStatus(id, request.getStatus());
-        return ResponseEntity.ok("Order status Updated Successfully!");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public Page<OrderResponse> getOrdersByUser(
+    public ResponseEntity<ApiResponse<PagedResponse<OrderResponse>>> getOrders(
             @RequestParam String userId,
-            @PageableDefault(
-                    size = 5,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            ) Pageable pageable){
-        return orderService.getOrdersByUser(userId, pageable);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+
+        String[] sortParams = sort.split(",");
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(sortParams[1]),
+                        sortParams[0])
+        );
+
+        PagedResponse<OrderResponse> response =
+                orderService.getOrdersByUser(userId, pageable);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Orders fetched successfully",
+                        response
+                )
+        );
     }
 }

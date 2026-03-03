@@ -4,6 +4,7 @@ import com.abhinav.order_service.domain.Order;
 import com.abhinav.order_service.domain.OrderStatus;
 import com.abhinav.order_service.dto.CreateOrderRequest;
 import com.abhinav.order_service.dto.OrderResponse;
+import com.abhinav.order_service.dto.PagedResponse;
 import com.abhinav.order_service.exception.OrderNotFoundException;
 import com.abhinav.order_service.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -57,8 +58,17 @@ public class OrderService {
         order.setStatus(newStatus);
     }
 
-    public Page<OrderResponse> getOrdersByUser(String userId, Pageable pageable){
+    public PagedResponse<OrderResponse> getOrdersByUser(String userId, Pageable pageable){
         Page<Order> ordersPage = orderRepository.findByUserId(userId, pageable);
-        return ordersPage.map(this::mapToResponse);
+        Page<OrderResponse> mapped = ordersPage.map(this::mapToResponse);
+
+        return new PagedRespose<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages(),
+                mapped.isLast()
+        );
     }
 }

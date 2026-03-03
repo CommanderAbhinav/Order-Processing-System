@@ -17,6 +17,9 @@ public class Order {
 
         private int quantity;
 
+        @Version
+        private Long version;
+
         public Long getId() {
                 return id;
         }
