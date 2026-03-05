@@ -62,7 +62,7 @@ public class OrderService {
         Page<Order> ordersPage = orderRepository.findByUserId(userId, pageable);
         Page<OrderResponse> mapped = ordersPage.map(this::mapToResponse);
 
-        return new PagedRespose<>(
+        return new PagedResponse<>(
                 mapped.getContent(),
                 mapped.getNumber(),
                 mapped.getSize(),
