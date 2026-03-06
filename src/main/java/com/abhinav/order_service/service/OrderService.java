@@ -5,7 +5,9 @@ import com.abhinav.order_service.domain.OrderStatus;
 import com.abhinav.order_service.dto.CreateOrderRequest;
 import com.abhinav.order_service.dto.OrderResponse;
 import com.abhinav.order_service.dto.PagedResponse;
+import com.abhinav.order_service.events.OrderCreatedEvent;
 import com.abhinav.order_service.exception.OrderNotFoundException;
+import com.abhinav.order_service.kafka.OrderEventProducer;
 import com.abhinav.order_service.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -15,9 +17,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final OrderEventProducer orderEventProducer;
 
-    public OrderService(OrderRepository orderRepository){
+    public OrderService(OrderRepository orderRepository,
+                        OrderEventProducer orderEventProducer) {
         this.orderRepository = orderRepository;
+        this.orderEventProducer = orderEventProducer;
     }
 
     public OrderResponse createOrder(CreateOrderRequest request){
@@ -30,6 +35,8 @@ public class OrderService {
 
         Order saved = orderRepository.save(order);
 
+        OrderCreatedEvent event = new OrderCreatedEvent(saved.getId(),saved.getUserId(),saved.getAmount());
+        orderEventProducer.publishOrderCreatedEvent(event);
         return mapToResponse(saved);
     }
 
