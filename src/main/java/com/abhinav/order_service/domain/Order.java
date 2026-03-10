@@ -1,11 +1,13 @@
 package com.abhinav.order_service.domain;
 
 import jakarta.persistence.*;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name="orders")
-public class Order {
+public class Order implements Serializable {
 
         @Id
         @GeneratedValue

@@ -10,6 +10,8 @@ import com.abhinav.order_service.exception.OrderNotFoundException;
 import com.abhinav.order_service.kafka.OrderEventProducer;
 import com.abhinav.order_service.repository.OrderRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -54,11 +56,13 @@ public class OrderService {
         return response;
     }
 
+    @Cacheable(value = "orders", key = "#id")
     public OrderResponse getOrderById(Long id){
         Order order = orderRepository.findById(id).orElseThrow(() ->new OrderNotFoundException(String.valueOf(id)));
         return mapToResponse(order);
     }
 
+    @CacheEvict(value = "orders", key = "#id", beforeInvocation = true)
     @Transactional
     public void updateOrderStatus(Long id, OrderStatus newStatus){
         Order order = orderRepository.findById(id).orElseThrow(()-> new OrderNotFoundException(String.valueOf(id)));

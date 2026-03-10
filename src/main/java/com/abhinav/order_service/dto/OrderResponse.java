@@ -1,8 +1,9 @@
 package com.abhinav.order_service.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class OrderResponse {
+public class OrderResponse implements Serializable {
 
     private Long id;
     private String userId;
